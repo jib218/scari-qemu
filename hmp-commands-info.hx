@@ -28,6 +28,20 @@ Show the version of QEMU.
 ETEXI
 
     {
+        .name       = "faults",
+        .args_type  = "",
+        .params     = "",
+        .help       = "show the faults",
+        .cmd        = hmp_info_faults,
+    },
+
+STEXI
+@item info faults
+@findex faults
+Show the faults.
+ETEXI
+
+    {
         .name       = "network",
         .args_type  = "",
         .params     = "",
