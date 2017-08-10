@@ -9,6 +9,7 @@
 #define FAULT_INJECTION_LIBRARY_H_
 
 //#include "qmp-commands.h"
+#include "qemu/osdep.h"
 
 /**
  * The declaration of the linked list, which contains
@@ -149,6 +150,9 @@ typedef struct Fault FaultList;
  */
 int getNumFaultListElements(void);
 FaultList* getFaultListElement(int element);
+
+bool faultReload(const char *filename);
+
 // void qmp_fault_reload(Monitor *mon, const char *filename, Error **errp);
 void delete_fault_list(void);
 int getMaxIDInFaultList(void);

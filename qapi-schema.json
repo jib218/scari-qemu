@@ -74,6 +74,8 @@
 ##
 { 'command': 'query-faults', 'returns': ['FaultInfo']}
 
+{ 'command': 'fault-reload',
+  'data': { 'filename': 'str'} }
 
 ##
 # @qmp_capabilities:

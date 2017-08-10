@@ -1,8 +1,6 @@
 /*
  * fault-injection-controller.h
  *
- *  Created on: 17.08.2014
- *      Author: Gerhard Schoenfelder
  */
 
 #ifndef FAULT_INJECTION_CONTROLLER_H_
@@ -10,6 +8,7 @@
 
 //#include "config.h"
 //#include "cpu.h"
+#include "qemu/osdep.h" // IMPORTANT FOR INT64_T ...
 
 /**
  * The declaration of the InjectionMode, which specifies,
@@ -42,5 +41,7 @@ typedef enum
 	exec_access_type,
 }AccessType;
 
+void fault_injection_controller_initTimer(void);
+void init_ops_on_cell(int size);
 
 #endif /* FAULT_INJECTION_CONTROLLER_H_ */

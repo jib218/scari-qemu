@@ -85,6 +85,13 @@ FaultInfoList *qmp_query_faults(Error **err)
     return head;
 }
 
+void qmp_fault_reload(const char *filename, Error **errp)
+{
+    if (!faultReload(filename)) {
+      error_setg(errp, "Could not load file.");
+    }
+}
+
 NameInfo *qmp_query_name(Error **errp)
 {
     NameInfo *info = g_malloc0(sizeof(*info));

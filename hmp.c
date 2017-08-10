@@ -163,8 +163,7 @@ void hmp_fault_reload(Monitor *mon, const QDict *qdict)
 
   Error *errp = NULL;
 
-  monitor_printf(mon, "%s\n", filename);
-  //  qmp_fault_reload(mon, filename, &errp);
+  qmp_fault_reload(filename, &errp);
 
   hmp_handle_error(mon, &errp);
 

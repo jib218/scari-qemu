@@ -408,7 +408,6 @@ int getMaxIDInFaultList(void)
 // 	}
 //}
 
-#ifdef LIBXML_READER_ENABLED
 /**
  * Parses the fault parameters from the XML file.
  *
@@ -531,11 +530,10 @@ int getMaxIDInFaultList(void)
  * Read the XML-file and checks the basic structure of the XML for
  * correctness. Starts the XML-parser.
  *
- * @param[in] mon - Reference to the QEMU-monitor
  * @param[in] filename - The name of the XML-file containing the fault definitions
  */
-// static int parseFile(Monitor *mon, const char *filename)
-// {
+static bool parse(const char *filename)
+{
 // 	xmlDocPtr doc;
 // 	xmlNodePtr cur;
 //
@@ -585,8 +583,8 @@ int getMaxIDInFaultList(void)
 //
 // 	validateXMLInput();
 // 	xmlFreeDoc(doc);
-// 	return 0;
-// }
+	return true;
+}
 //
 // /**
 //  * Read the XML-file and checks the basic structure of the XML for
@@ -639,9 +637,47 @@ int getMaxIDInFaultList(void)
   //
   //   xmlCleanupParser();
 //}
-#else
 // void qmp_fault_reload(Monitor *mon, const char *filename, Error **errp)
 // {
 // 	error_setg(errp, "Error: Configuration file not loaded - XInclude support not compiled\n");
 // }
+
+bool faultReload(const char *filename)
+{
+    /*
+	     * this initialize the library and check potential ABI mismatches
+	     * between the version it was compiled for and the actual shared
+	     * library used.
+	     */
+		int max_id = 0;
+
+		/**
+		 * Starting new fault injection experiment -
+		 * reset timer and statistics
+		*/
+		fault_injection_controller_initTimer();
+		set_num_injected_faults(0);
+		set_num_detected_faults(0);
+		set_num_injected_faults_ram_trans(0);
+		set_num_injected_faults_ram_perm(0);
+		set_num_injected_faults_cpu_trans(0);
+		set_num_injected_faults_cpu_perm(0);
+		set_num_injected_faults_register_trans(0);
+		set_num_injected_faults_register_perm(0);
+
+	  if (!parse(filename))
+		 	return false;
+
+#if defined(DEBUG_FAULT_LIST)
+//    print_fault_list();
 #endif
+		/**
+ 			* Initialize the context for a new fault injection experiment
+			*/
+   max_id = getMaxIDInFaultList();
+   init_id_array(max_id);
+   init_ops_on_cell(max_id);
+//
+//   xmlCleanupParser();
+	return true;
+}
