@@ -190,8 +190,8 @@ Set default value of @var{driver}'s property @var{prop} to @var{value}, e.g.:
 qemu-system-i386 -global ide-drive.physical_block_size=4096 -drive file=file,if=ide,index=0,media=disk
 @end example
 
-In particular, you can use this to set driver properties for devices which are 
-created automatically by the machine model. To create a device which is not 
+In particular, you can use this to set driver properties for devices which are
+created automatically by the machine model. To create a device which is not
 created automatically and set properties on it, use -@option{device}.
 
 -global @var{driver}.@var{prop}=@var{value} is shorthand for -global
@@ -4068,6 +4068,21 @@ contents of @code{iv.b64} to the second secret
 
 ETEXI
 
+DEF("fi", HAS_ARG, QEMU_OPTION_fi,
+    "-fi     activates the fault injection experiment\n", QEMU_ARCH_ALL)
+STEXI
+@item -fi @var{item1}[,...]
+@findex -fi
+Activates the fault injection experiment
+ETEXI
+
+DEF("profiling", HAS_ARG, QEMU_OPTION_profiling,
+    "-profiling  activates profiling of memory/register usage of the binary\n", QEMU_ARCH_ALL)
+STEXI
+@item -profiling @var{item1}[,...]
+@findex -profiling
+Activates profiling of memory/register usage of the binary
+ETEXI
 
 HXCOMM This is the last statement. Insert new options before this line!
 STEXI
