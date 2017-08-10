@@ -1,1 +1,3 @@
-common-obj-y = fault-injection-collector.o fault-injection-controller.o
+common-obj-y  = fault-injection-collector.o fault-injection-controller.o
+common-obj-y += fault-injection-data-analyzer.o
+common-obj-y += fault-injection-library.o

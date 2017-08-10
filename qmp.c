@@ -37,6 +37,54 @@
 #include "hw/mem/pc-dimm.h"
 #include "hw/acpi/acpi_dev_interface.h"
 
+#include "fies/fault-injection-library.h"
+
+FaultInfoList *qmp_query_faults(Error **err)
+{
+    FaultInfoList *head = NULL, *cur_item = NULL;
+    FaultList *fault;
+    int element = 0;
+
+    for (element = 0; element < getNumFaultListElements(); element++)
+    {
+    	FaultInfoList *info;
+    	fault = getFaultListElement(element);
+
+		  info = g_malloc0(sizeof(*info));
+		  info->value = g_malloc0(sizeof(*info->value));
+		  info->value->component = g_strdup(fault->component);
+		  info->value->mode = g_strdup(fault->mode);
+		  info->value->target = g_strdup(fault->target);
+		  info->value->type = g_strdup(fault->type);
+		  info->value->duration = g_strdup(fault->duration);
+		  info->value->interval = g_strdup(fault->interval);
+		  info->value->timer = g_strdup(fault->timer);
+		  info->value->id = fault->id;
+		  info->value->trigger = g_strdup(fault->trigger);
+		  info->value->params->address = fault->params.address;
+		  info->value->params->cf_address = fault->params.cf_address;
+		  info->value->params->mask = fault->params.mask;
+		  info->value->params->instruction = fault->params.instruction;
+		  info->value->params->set_bit = fault->params.set_bit;
+
+	      //TODO: set is_acitve !!!!
+		  info->value->is_active = fault->is_active;
+
+		  /* XXX: waiting for the qapi to support GSList */
+		  if (!cur_item)
+		  {
+		  	head = cur_item = info;
+		  }
+		  else
+		  {
+		  	cur_item->next = info;
+		  	cur_item = info;
+		  }
+    }
+
+    return head;
+}
+
 NameInfo *qmp_query_name(Error **errp)
 {
     NameInfo *info = g_malloc0(sizeof(*info));

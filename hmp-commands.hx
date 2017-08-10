@@ -24,6 +24,20 @@ Show the help for all commands or just for command @var{cmd}.
 ETEXI
 
     {
+        .name       = "fault_reload",
+        .args_type  = "filename:s",
+        .params     = "file",
+        .help       = "load the config file",
+        .cmd = hmp_fault_reload,
+    },
+
+STEXI
+@item fault_reload @var{file}
+@findex fault_reload
+load the config file from @var{file}.
+ETEXI
+
+    {
         .name       = "commit",
         .args_type  = "device:B",
         .params     = "device|all",
