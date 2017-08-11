@@ -1,4 +1,5 @@
 obj-y += fault-injection-controller.o
+obj-y += fault-injection-injector.o
 common-obj-y += fault-injection-collector.o
 common-obj-y += fault-injection-data-analyzer.o
 common-obj-y += fault-injection-library.o

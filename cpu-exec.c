@@ -34,6 +34,11 @@
 #endif
 #include "sysemu/replay.h"
 
+// -------------------------------------------------------------------------
+#include "fies/fault-injection-controller.h"
+// -------------------------------------------------------------------------
+
+
 /* -icount align implementation. */
 
 typedef struct SyncClocks {
@@ -323,6 +328,16 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
        always be the same before a given translated block
        is executed. */
     cpu_get_tb_cpu_state(env, &pc, &cs_base, &flags);
+
+    // -------------------------------------------------------------------------
+    // According to Andrea useless
+    // start_automatic_test_process(env);
+    //    uint64_t pc64 = pc;
+    //    fault_injection_controller_init(env, (&pc64), NULL, FI_TIME, -1);
+    //    pc = pc64;
+    // -------------------------------------------------------------------------
+
+
     tb = atomic_rcu_read(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)]);
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
                  tb->flags != flags)) {
