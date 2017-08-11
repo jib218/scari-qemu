@@ -5,9 +5,11 @@
  *      Author: Gerhard Schoenfelder
  */
 #include "fault-injection-data-analyzer.h"
-#include "fault-injection-controller.h"
 #include "fault-injection-config.h"
 
+#include "qemu/osdep.h"
+#include "qemu/error-report.h"
+#include "qom/cpu.h"
 
  /**
   * The variables for counting injected faults at different
@@ -29,7 +31,7 @@
   * Hence the diagnostic coverage is distorted by incrementing the injected
   * fault number.
   */
- // static int *id_array;
+ static int *id_array;
 
  /**
   * Increments a specified fault type (e.g. transient ram faults)
@@ -41,32 +43,32 @@
   */
 void incr_num_injected_faults(int id, const char* fault_type)
 {
-	// id -= 1;
-  //
-	// if (id_array[id])
-	// 	return;
-  //
-	// num_injected_faults++;
-  //
-	// if (!strcmp(fault_type, "ram trans"))
-	// 	num_injected_faults_ram_trans++;
-	// else if (!strcmp(fault_type, "ram perm"))
-	// 	num_injected_faults_ram_perm++;
-	// else if (!strcmp(fault_type, "cpu trans"))
-	// 	num_injected_faults_cpu_trans++;
-	// else if (!strcmp(fault_type, "cpu perm"))
-	// 	num_injected_faults_cpu_perm++;
-	// else if (!strcmp(fault_type, "reg trans"))
-	// 	num_injected_faults_register_trans++;
-	// else if (!strcmp(fault_type, "reg perm"))
-	// 	num_injected_faults_register_perm++;
-	// else
-	// {
-	// 	fprintf(stderr, "error: unknown fault type: %s\n", fault_type);
-	// 	return;
-	// }
-  //
-	// id_array[id] = 1;
+	id -= 1;
+
+	if (id_array[id])
+		return;
+
+	num_injected_faults++;
+
+	if (!strcmp(fault_type, "ram trans"))
+		num_injected_faults_ram_trans++;
+	else if (!strcmp(fault_type, "ram perm"))
+		num_injected_faults_ram_perm++;
+	else if (!strcmp(fault_type, "cpu trans"))
+		num_injected_faults_cpu_trans++;
+	else if (!strcmp(fault_type, "cpu perm"))
+		num_injected_faults_cpu_perm++;
+	else if (!strcmp(fault_type, "reg trans"))
+		num_injected_faults_register_trans++;
+	else if (!strcmp(fault_type, "reg perm"))
+		num_injected_faults_register_perm++;
+	else
+	{
+		error_printf("error: unknown fault type: %s\n", fault_type);
+		return;
+	}
+
+	id_array[id] = 1;
 }
 
 /**
@@ -76,11 +78,11 @@ void incr_num_injected_faults(int id, const char* fault_type)
  */
 void init_id_array(int size)
 {
-	// int i = 0;
-  //
-	// id_array = (int*) malloc(size * sizeof(int*));
-	// for (i = 0; i < size; i++)
-	// 	id_array[i] = 0;
+	int i = 0;
+
+	id_array = (int*) malloc(size * sizeof(int*));
+	for (i = 0; i < size; i++)
+		id_array[i] = 0;
 }
 
 /**
@@ -89,8 +91,8 @@ void init_id_array(int size)
  */
 void destroy_id_array(void)
 {
-	// if (id_array)
-	// 	free(id_array);
+	if (id_array)
+		free(id_array);
 }
 
 /**
@@ -175,24 +177,21 @@ void set_num_detected_faults(int num)
  * @param[in] num - the number, which should be written to
  *                              file_input_to_use_address
  */
-void set_input_file_to_use(int num)
-{
-
-	// uint8_t *membytes = (uint8_t *)&num;
-  //
-  //   if (next_cpu == NULL)
-  //       next_cpu = first_cpu;
-  //
-  //   for (; next_cpu != NULL; next_cpu = CPU_NEXT(next_cpu))
-  //   {
-  //       CPUState *cpu = next_cpu;
-  //
-  //       if (file_input_to_use_address){
-  //       	cpu_memory_rw_debug(cpu, file_input_to_use_address, membytes, 4, 1);
-	// 	}
-  //
-	// }
-}
+// void set_input_file_to_use(int num)
+// {
+//   	uint8_t *membytes = (uint8_t *)&num;
+//
+//     if (next_cpu == NULL)
+//         next_cpu = first_cpu;
+//
+//     for (; next_cpu != NULL; next_cpu = CPU_NEXT(next_cpu))
+//     {
+//         CPUState *cpu = next_cpu;
+//         if (file_input_to_use_address){
+//         	cpu_memory_rw_debug(cpu, file_input_to_use_address, membytes, 4, 1);
+//   		  }
+//   	}
+// }
 
 /**
  * Sets the number of injected transient ram faults to a

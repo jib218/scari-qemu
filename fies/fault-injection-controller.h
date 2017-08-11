@@ -9,6 +9,9 @@
 //#include "config.h"
 //#include "cpu.h"
 #include "qemu/osdep.h" // IMPORTANT FOR INT64_T ...
+#include "fault-injection-config.h"
+
+
 
 /**
  * The declaration of the InjectionMode, which specifies,
@@ -30,21 +33,6 @@ typedef enum
    FI_TIME
 }InjectionMode;
 
-/**
- * The declaration of the AccessType, which specifies
- * a read-, write- or execution-access
- */
-typedef enum
-{
-	read_access_type,
-	write_access_type,
-	exec_access_type,
-}AccessType;
-
-void fault_injection_controller_initTimer(void);
-int ends_with(const char *string, const char *ending);
-int timer_to_int(const char *string);
-void init_ops_on_cell(int size);
-void destroy_ops_on_cell(void);
+void start_automatic_test_process(CPUArchState *env);
 
 #endif /* FAULT_INJECTION_CONTROLLER_H_ */

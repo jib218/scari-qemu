@@ -10,6 +10,7 @@
 
 //#include "qmp-commands.h"
 #include "qemu/osdep.h"
+#include "fault-injection-config.h"
 
 /**
  * The declaration of the linked list, which contains
@@ -153,8 +154,13 @@ FaultList* getFaultListElement(int element);
 
 bool faultReload(const char *filename);
 
-// void qmp_fault_reload(Monitor *mon, const char *filename, Error **errp);
 void delete_fault_list(void);
 int getMaxIDInFaultList(void);
+
+void init_ops_on_cell(int size);
+void destroy_ops_on_cell(void);
+
+int64_t fault_injection_controller_getTimer(void);
+void fault_injection_controller_initTimer(void);
 
 #endif /* FAULT_INJECTION_LIBRARY_H_ */

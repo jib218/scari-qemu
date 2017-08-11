@@ -8,7 +8,6 @@
 #ifndef FAULT_INJECTION_H_
 #define FAULT_INJECTION_H_
 
-//#include <stdio.h>
 #include "qemu/osdep.h"
 
 /**
