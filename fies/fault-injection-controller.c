@@ -5,6 +5,7 @@
 #include "fault-injection-controller.h"
 
 #include "fault-injection-config.h"
+#include "fault-injection-library.h"
 #include "qemu/timer.h"
 
 char *fault_library_name;
@@ -27,6 +28,45 @@ static int **ops_on_register_cell;
 void fault_injection_controller_initTimer(void)
 {
   timer_value = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+}
+
+/**
+ * Compares the ending of a string with a given ending.
+ *
+ * @param[in] string - the whole string
+ * @param[in] ending - the string containing the postfix
+ * @param[out] - 1 if the string contains the  given ending, 0 otherwise
+ */
+int ends_with(const char *string, const char *ending)
+{
+	int string_len = strlen(string);
+	int ending_len = strlen(ending);
+
+	if ( ending_len > string_len)
+		return 0;
+
+	return !strcmp(&string[string_len - ending_len], ending);
+}
+
+/**
+ * Extracts the ending of the given string and converts
+ * the result to an interger value.
+ *
+ * @param[in] string - the given string
+ * @param[out] - the timer value as integer
+ */
+int timer_to_int(const char *string)
+{
+	int string_len = strlen(string);
+	char timer_string[string_len-1];
+
+	if ( string_len < 3)
+		return 0;
+
+	memset(timer_string, '\0', sizeof(timer_string));
+	strncpy(timer_string, string, string_len-2);
+
+	return (int) strtol(timer_string, NULL, 10);
 }
 
 /**
@@ -56,5 +96,22 @@ void init_ops_on_cell(int ids)
 			ops_on_register_cell[i][j] = -1;
 		}
 	}
+}
 
+/**
+ * Deletes the ops_on_memory_cell- and
+ * ops_on_register_cell-array.
+ */
+void destroy_ops_on_cell(void)
+{
+	int i = 0;
+
+	for(i = 0; i < getMaxIDInFaultList(); i++)
+	{
+	    free(ops_on_memory_cell[i]);
+	 	free(ops_on_register_cell[i]);
+	}
+
+	free(ops_on_memory_cell);
+	free(ops_on_register_cell);
 }
