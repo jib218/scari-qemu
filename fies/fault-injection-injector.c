@@ -449,34 +449,34 @@
 // 		do_inject_new_memory_value_arm(env, *addr, fi_info);
 // }
 //
-// /**
-//  * Calls the appropriate function for the used CPU-model and decides,
-//  * based on the information held by fi_info, if the fault injection is
-//  * performed on a register or a memory.
-//  *
-//  * @param[in] env - Reference to the information of the CPU state.
-//  * @param[in] addr - containing the memory address.
-//  * @param[in] fi_info - information for performing faults.
-//  */
-// void do_inject_memory_register(CPUArchState *env, hwaddr *addr,
-// 														FaultInjectionInfo fi_info)
-// {
-// 	#if defined(TARGET_ARM)
-// 		if (fi_info.fault_on_register)
-// 		{
-// 			if (fi_info.fault_on_address || fi_info.access_triggered_content_fault)
-// 				do_inject_memory_buffer_arm(addr, fi_info);
-// 			else
-// 				do_inject_register_arm(env, addr, fi_info);
-// 		}
-// 		else
-// 		{
-// 			if (fi_info.fault_on_address || fi_info.access_triggered_content_fault)
-// 				do_inject_memory_buffer_arm(addr, fi_info);
-// 			else
-// 				do_inject_memory_arm(env, addr, fi_info);
-// 		}
-// 	#else
-// 		#error unsupported target CPU
-// 	#endif
-// }
+/**
+ * Calls the appropriate function for the used CPU-model and decides,
+ * based on the information held by fi_info, if the fault injection is
+ * performed on a register or a memory.
+ *
+ * @param[in] env - Reference to the information of the CPU state.
+ * @param[in] addr - containing the memory address.
+ * @param[in] fi_info - information for performing faults.
+ */
+void do_inject_memory_register(CPUArchState *env, hwaddr *addr,
+														FaultInjectionInfo fi_info)
+{
+	#if defined(TARGET_ARM)
+		if (fi_info.fault_on_register)
+		{
+			if (fi_info.fault_on_address || fi_info.access_triggered_content_fault)
+				do_inject_memory_buffer_arm(addr, fi_info);
+			else
+				do_inject_register_arm(env, addr, fi_info);
+		}
+		else
+		{
+			if (fi_info.fault_on_address || fi_info.access_triggered_content_fault)
+				do_inject_memory_buffer_arm(addr, fi_info);
+			else
+				do_inject_memory_arm(env, addr, fi_info);
+		}
+	#else
+//		#error unsupported target CPU
+	#endif
+}

@@ -157,10 +157,15 @@ bool faultReload(const char *filename);
 void delete_fault_list(void);
 int getMaxIDInFaultList(void);
 
+int ends_with(const char *string, const char *ending);
+int timer_to_int(const char *string);
+
 void init_ops_on_cell(int size);
 void destroy_ops_on_cell(void);
 
 int64_t fault_injection_controller_getTimer(void);
 void fault_injection_controller_initTimer(void);
+
+
 
 #endif /* FAULT_INJECTION_LIBRARY_H_ */

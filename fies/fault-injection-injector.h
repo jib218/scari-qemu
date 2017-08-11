@@ -10,7 +10,7 @@
 
 #include "qemu/osdep.h"
 
-//#include "cpu.h"
+#include "cpu.h"
 
 /**
  * The declaration of parameters, which decides
@@ -73,6 +73,6 @@ typedef struct
 // void do_inject_condition_flags(CPUARMState *env, const char* src_flag_name,
 // 																				int new_flag_value);
 // void do_inject_insn(unsigned int *orig_insn, unsigned int repl_insn);
-// void do_inject_memory_register(CPUArchState *env, hwaddr *addr, FaultInjectionInfo fi_info);
+void do_inject_memory_register(CPUArchState *env, hwaddr *addr, FaultInjectionInfo fi_info);
 
 #endif /* FAULT_INJECTION_INJECTOR_H_ */

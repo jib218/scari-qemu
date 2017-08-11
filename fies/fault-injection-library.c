@@ -241,7 +241,7 @@ int getMaxIDInFaultList(void)
  * @param[in] ending - the string containing the postfix
  * @param[out] - 1 if the string contains the  given ending, 0 otherwise
  */
-static int ends_with(const char *string, const char *ending)
+int ends_with(const char *string, const char *ending)
 {
 	int string_len = strlen(string);
 	int ending_len = strlen(ending);
@@ -259,7 +259,7 @@ static int ends_with(const char *string, const char *ending)
  * @param[in] string - the given string
  * @param[out] - the timer value as integer
  */
-static int timer_to_int(const char *string)
+int timer_to_int(const char *string)
 {
 	int string_len = strlen(string);
 	char timer_string[string_len-1];
