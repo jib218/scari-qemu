@@ -11,7 +11,7 @@
 #include "fault-injection-data-analyzer.h"
 
 //#include <unistd.h>
-//#include <libxml/xmlreader.h>
+#include <libxml/xmlreader.h>
 //#include "profiler.h"
 /**
  * Linked list pointer to the first entry
