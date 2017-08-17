@@ -33,14 +33,14 @@ static int num_list_elements = 0;
  * memory cell operations for
  * dynamic faults.
  */
-static int **ops_on_memory_cell;
+int **ops_on_memory_cell;
 
 /**
  * Array, which stores the previous
  * register cell operations for
  * dynamic faults.
  */
-static int **ops_on_register_cell;
+int **ops_on_register_cell;
 
 char *fault_library_name;
 

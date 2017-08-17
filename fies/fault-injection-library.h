@@ -160,8 +160,24 @@ int getMaxIDInFaultList(void);
 int ends_with(const char *string, const char *ending);
 int timer_to_int(const char *string);
 
+/**
+ * Declares the different types of previous
+ * cell operations for dynamic faults.
+ */
+typedef enum
+{
+	OPs_0w0,
+	OPs_0w1,
+	OPs_1w0,
+	OPs_1w1,
+}CellOps;
+
+extern int **ops_on_memory_cell;
+extern int **ops_on_register_cell;
+
 void init_ops_on_cell(int size);
 void destroy_ops_on_cell(void);
+
 
 int64_t fault_injection_controller_getTimer(void);
 void fault_injection_controller_initTimer(void);
