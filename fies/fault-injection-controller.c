@@ -4026,29 +4026,29 @@ void fault_injection_controller_init(CPUArchState *env, hwaddr *addr,
 	  {
 		    fault_injection_controller_memory_address(env, addr);
 	  }
-	else if (injection_mode == FI_MEMORY_CONTENT)
-	{
-		if (env)
-		{
-			fault_injection_controller_memory_content(env, addr, value, access_type);
-			return;
-		}
+  	else if (injection_mode == FI_MEMORY_CONTENT)
+  	{
+  		if (env)
+  		{
+  			fault_injection_controller_memory_content(env, addr, value, access_type);
+  			return;
+  		}
 
-		/**
-		 * get the CPUArchState of the current CPU (if not defined)
-		 */
-		if (next_cpu == NULL)
-			next_cpu = first_cpu;
+  		/**
+  		 * get the CPUArchState of the current CPU (if not defined)
+  		 */
+  		if (next_cpu == NULL)
+  			next_cpu = first_cpu;
 
-		for (; next_cpu != NULL && !exit_request; next_cpu = CPU_NEXT(next_cpu))
-		{
-			CPUState *cpu = next_cpu;
-			CPUArchState *env = cpu->env_ptr;
+  		for (; next_cpu != NULL && !exit_request; next_cpu = CPU_NEXT(next_cpu))
+  		{
+  			CPUState *cpu = next_cpu;
+  			CPUArchState *env = cpu->env_ptr;
 
-			fault_injection_controller_memory_content(env, addr, value, access_type);
-		}
+  			fault_injection_controller_memory_content(env, addr, value, access_type);
+  		}
 
-	}
+  	}
 	// else if (injection_mode == FI_INSN)
 	// {
 	// 	fault_injection_controller_insn(env, addr);

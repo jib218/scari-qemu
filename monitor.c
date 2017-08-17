@@ -79,6 +79,9 @@
 #include "qemu/cutils.h"
 #include "qapi/qmp/dispatch.h"
 
+#include "fies/fault-injection-collector.h"
+#include "fies/fault-injection-config.h"
+
 #if defined(TARGET_S390X)
 #include "hw/s390x/storage-keys.h"
 #endif
@@ -248,7 +251,7 @@ void monitor_read_command(Monitor *mon, int show_prompt)
     if (!mon->rs)
         return;
 
-    readline_start(mon->rs, "(qemu) ", 0, monitor_command_cb, NULL);
+    readline_start(mon->rs, "(qemu-fies) ", 0, monitor_command_cb, NULL);
     if (show_prompt)
         readline_show_prompt(mon->rs);
 }
@@ -335,6 +338,7 @@ static void monitor_puts(Monitor *mon, const char *str)
             break;
         if (c == '\n') {
             qstring_append_chr(mon->outbuf, '\r');
+            data_collector_write(qstring_get_str(mon->outbuf));
         }
         qstring_append_chr(mon->outbuf, c);
         if (c == '\n') {
@@ -2492,11 +2496,11 @@ static int default_fmt_size = 4;
 static int is_valid_option(const char *c, const char *typestr)
 {
     char option[3];
-  
+
     option[0] = '-';
     option[1] = *c;
     option[2] = '\0';
-  
+
     typestr = strstr(typestr, option);
     return (typestr != NULL);
 }
@@ -2861,7 +2865,7 @@ static QDict *monitor_parse_arguments(Monitor *mon,
                     p++;
                     if(c != *p) {
                         if(!is_valid_option(p, typestr)) {
-                  
+
                             monitor_printf(mon, "%s: unsupported option -%c\n",
                                            cmd->name, *p);
                             goto fail;
@@ -3902,7 +3906,7 @@ static void monitor_event(void *opaque, int event)
         break;
 
     case CHR_EVENT_OPENED:
-        monitor_printf(mon, "QEMU %s monitor - type 'help' for more "
+        monitor_printf(mon, "QEMU-FIES %s monitor - type 'help' for more "
                        "information\n", QEMU_VERSION);
         if (!mon->mux_out) {
             readline_restart(mon->rs);
@@ -3985,6 +3989,17 @@ void monitor_init(CharDriverState *chr, int flags)
 {
     static int is_first_init = 1;
     Monitor *mon;
+
+    if (get_do_fault_injection())
+    {
+    	data_collector = fopen(DATA_COLLECTOR_FILENAME, "w");
+    	if (data_collector == NULL)
+    	{
+            fprintf(stderr, "Error opening file!\n");
+    	    exit(1);
+    	}
+    	fclose(data_collector);
+    }
 
     if (is_first_init) {
         monitor_qapi_event_init();

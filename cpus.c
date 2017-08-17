@@ -47,6 +47,9 @@
 #include "hw/nmi.h"
 #include "sysemu/replay.h"
 
+#include "fies/fault-injection-library.h"
+#include "fies/fault-injection-data-analyzer.h"
+
 #ifndef _WIN32
 #include "qemu/compatfd.h"
 #endif
@@ -1216,6 +1219,10 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
         qemu_tcg_wait_io_event(QTAILQ_FIRST(&cpus));
         deal_with_unplugged_cpus();
     }
+
+    delete_fault_list();
+    destroy_id_array();
+    destroy_ops_on_cell();
 
     return NULL;
 }
