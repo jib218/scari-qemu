@@ -10,6 +10,8 @@
 #include "cpu.h"
 #include "fault-injection-config.h"
 
+#define DEBUG_FAULT_CONTROLLER
+
 void fault_injection_controller_init(CPUArchState *env, hwaddr *addr,
 												uint32_t *value, InjectionMode injection_mode,
 												AccessType access_type);

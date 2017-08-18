@@ -46,12 +46,12 @@ void profiler_log_memory_access(hwaddr *addr, uint32_t *value, AccessType access
 
 	if (access_type == write_access_type)
 	{
-		fprintf(outfile_memory, "0x%08x w 0x%x\n", (int)*addr, *value); // I do not know wheter value should be dereferenced
+        fprintf(outfile_memory, "%lx w 0x%x\n", (hwaddr)*addr, *value); // I do not know wheter value should be dereferenced
 	}
 	else
 	{
 		char access_str = (access_type == read_access_type) ? 'r' : 'e';
-	 	fprintf(outfile_memory, "0x%08x %c \n", (int)*addr, access_str);
+        fprintf(outfile_memory, "%lx %c \n", (hwaddr)*addr, access_str);
 	}
 }
 
@@ -65,12 +65,12 @@ void profiler_log_register_access(hwaddr *addr, uint32_t *value, AccessType acce
 
 	if (access_type == write_access_type)
 	{
-		fprintf(outfile_registers, "0x%08x w 0x%x\n", (int)*addr, *value);
+        fprintf(outfile_registers, "%lx w 0x%x\n", (hwaddr)*addr, *value);
 	}
 	else
 	{
 		char access_str = (access_type == read_access_type) ? 'r' : 'e';
-	 	fprintf(outfile_registers, "0x%08x %c \n", (int)*addr, access_str);
+        fprintf(outfile_registers, "%lx %c \n", (hwaddr)*addr, access_str);
 	}
 }
 

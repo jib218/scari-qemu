@@ -63,6 +63,8 @@
 #include "qemu/mmap-alloc.h"
 #endif
 
+#include "fies/fault-injection-controller.h"
+
 //#define DEBUG_SUBPAGE
 
 #if !defined(CONFIG_USER_ONLY)
@@ -236,6 +238,8 @@ static uint32_t phys_map_node_alloc(PhysPageMap *map, bool leaf)
     uint32_t ret;
     PhysPageEntry e;
     PhysPageEntry *p;
+
+    //error_report("phys_map_node_alloc");
 
     ret = map->nodes_nb++;
     p = map->nodes[ret];
@@ -2751,9 +2755,12 @@ MemTxResult address_space_read_full(AddressSpace *as, hwaddr addr,
 MemTxResult address_space_rw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,
                              uint8_t *buf, int len, bool is_write)
 {
+   // error_report("address space rw: %lu", addr);
     if (is_write) {
+        fault_injection_controller_init(NULL, &addr, (uint32_t*)buf, FI_MEMORY_CONTENT, write_access_type);
         return address_space_write(as, addr, attrs, (uint8_t *)buf, len);
     } else {
+        fault_injection_controller_init(NULL, &addr, (uint32_t*)buf, FI_MEMORY_CONTENT, read_access_type);
         return address_space_read(as, addr, attrs, (uint8_t *)buf, len);
     }
 }
@@ -3112,6 +3119,7 @@ static inline uint32_t address_space_ldl_internal(AddressSpace *as, hwaddr addr,
         qemu_mutex_unlock_iothread();
     }
     rcu_read_unlock();
+    fault_injection_controller_init(NULL, &addr, ((uint32_t*)&val), FI_MEMORY_CONTENT, read_access_type);
     return val;
 }
 
@@ -3205,6 +3213,7 @@ static inline uint64_t address_space_ldq_internal(AddressSpace *as, hwaddr addr,
         qemu_mutex_unlock_iothread();
     }
     rcu_read_unlock();
+    fault_injection_controller_init(NULL, &addr, ((uint32_t*)&val), FI_MEMORY_CONTENT, read_access_type);
     return val;
 }
 
@@ -3399,6 +3408,7 @@ void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
 
 void stl_phys_notdirty(AddressSpace *as, hwaddr addr, uint32_t val)
 {
+    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
     address_space_stl_notdirty(as, addr, val, MEMTXATTRS_UNSPECIFIED, NULL);
 }
 
@@ -3415,6 +3425,8 @@ static inline void address_space_stl_internal(AddressSpace *as,
     hwaddr addr1;
     MemTxResult r;
     bool release_lock = false;
+
+    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
 
     rcu_read_lock();
     mr = address_space_translate(as, addr, &addr1, &l,
@@ -3525,6 +3537,8 @@ static inline void address_space_stw_internal(AddressSpace *as,
     hwaddr addr1;
     MemTxResult r;
     bool release_lock = false;
+
+    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
 
     rcu_read_lock();
     mr = address_space_translate(as, addr, &addr1, &l, true);
