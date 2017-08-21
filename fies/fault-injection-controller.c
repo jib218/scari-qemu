@@ -3719,6 +3719,8 @@ static void fault_injection_controller_memory_content(CPUArchState *env, hwaddr 
     int element = 0;
     FaultInjectionInfo fi_info = {0, 0, 0, 0, 0, 0, 0};
 
+  //  tlb_flush_page(ENV_GET_CPU(env), (target_ulong)*addr);
+
     for (element = 0; element < getNumFaultListElements(); element++)
     {
     	fault = getFaultListElement(element);

@@ -1307,6 +1307,7 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
         if (is_physical) {
             cpu_physical_memory_read(addr, buf, l);
         } else {
+            error_printf("cpu memory rw debug\n");
             if (cpu_memory_rw_debug(mon_get_cpu(), addr, buf, l, 0) < 0) {
                 monitor_printf(mon, " Cannot access memory\n");
                 break;
@@ -1317,18 +1318,23 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
             switch(wsize) {
             default:
             case 1:
+                error_printf("Case 1");
                 v = ldub_p(buf + i);
                 break;
             case 2:
+                error_printf("Case 2");
                 v = lduw_p(buf + i);
                 break;
             case 4:
+                error_printf("Case 4");
                 v = (uint32_t)ldl_p(buf + i);
                 break;
             case 8:
                 v = ldq_p(buf + i);
+                error_printf("Case 8");
                 break;
             }
+            error_printf("V: %lx\n", v);
             monitor_printf(mon, " ");
             switch(format) {
             case 'o':
@@ -1355,13 +1361,34 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
     }
 }
 
+static void hmp_inject(Monitor *mon, const QDict *qdict)
+{
+    const char *address = qdict_get_str(qdict, "address");
+    hwaddr addressValue = strtoul(address, NULL ,0);
+
+    const char *val = qdict_get_str(qdict, "val");
+    unsigned long valueToSet = strtoul(val, NULL ,0);
+
+    uint8_t *membytes = (uint8_t *)&valueToSet;
+
+    int numOfBytes = qdict_get_int(qdict, "numOfBytes");
+
+    if (cpu_memory_rw_debug(mon_get_cpu(), addressValue, membytes, numOfBytes , 1) < 0) {
+        monitor_printf(mon, "Cannot access memory\n");
+    } else {
+        monitor_printf(mon, "Success\n");
+    }
+
+}
+
+
 static void hmp_memory_dump(Monitor *mon, const QDict *qdict)
 {
     int count = qdict_get_int(qdict, "count");
     int format = qdict_get_int(qdict, "format");
     int size = qdict_get_int(qdict, "size");
     target_long addr = qdict_get_int(qdict, "addr");
-
+    error_printf("format %c\n", format);
     memory_dump(mon, count, format, size, addr, 0);
 }
 

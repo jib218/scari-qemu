@@ -26,7 +26,7 @@
  * array, which stores the previous cell operation
  * modes for dynamic faults.
  */
-#define MEMORY_WIDTH	16
+#define MEMORY_WIDTH	32
 
 /**
  * Uncomment the following define for activating debug output

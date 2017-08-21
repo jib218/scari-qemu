@@ -34,7 +34,20 @@ ETEXI
 STEXI
 @item fault_reload @var{file}
 @findex fault_reload
-load the config file from @var{file}.
+ETEXI
+
+    {
+        .name       = "inject",
+        .args_type  = "address:s,val:s,numOfBytes:i",
+        .params     = "address val numOfBytes",
+        .help       = "set value of virtual address",
+        .cmd = hmp_inject,
+    },
+
+STEXI
+@item inject @var{address} @var{value}
+@findex inject
+Set an address to a value.
 ETEXI
 
     {
