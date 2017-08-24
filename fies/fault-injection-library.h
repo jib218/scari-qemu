@@ -11,6 +11,7 @@
 //#include "qmp-commands.h"
 #include "qemu/osdep.h"
 #include "fault-injection-config.h"
+#include "exec/hwaddr.h"
 
 /**
  * The declaration of the linked list, which contains
@@ -183,5 +184,22 @@ int64_t fault_injection_controller_getTimer(void);
 void fault_injection_controller_initTimer(void);
 
 
+struct StuckAt {
+    hwaddr vaddr;
+    uint8_t *membytes;
+    int numofbytes;
+
+    struct StuckAt *next;
+};
+
+typedef struct StuckAt StuckAtList;
+
+extern StuckAtList *stuckAtHead;
+
+void insert_stuckat_value(hwaddr vaddr, uint8_t *membytes, int numofbytes);
+
+void remove_stuckat_value(hwaddr vaddr);
+
+void delete_stuckat_list(void);
 
 #endif /* FAULT_INJECTION_LIBRARY_H_ */

@@ -81,6 +81,7 @@
 
 #include "fies/fault-injection-collector.h"
 #include "fies/fault-injection-config.h"
+#include "fies/fault-injection-library.h"
 
 #if defined(TARGET_S390X)
 #include "hw/s390x/storage-keys.h"
@@ -1361,17 +1362,26 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
     }
 }
 
-static void hmp_inject(Monitor *mon, const QDict *qdict)
+static void hmp_inject_value(Monitor *mon, const QDict *qdict)
 {
     const char *address = qdict_get_str(qdict, "address");
     hwaddr addressValue = strtoul(address, NULL ,0);
 
     const char *val = qdict_get_str(qdict, "val");
-    unsigned long valueToSet = strtoul(val, NULL ,0);
+    size_t length = strlen(val);
 
-    uint8_t *membytes = (uint8_t *)&valueToSet;
+    int numOfBytes = (length % 2 ? (length/2 + 1) : (length/2));
+    uint8_t *membytes = (uint8_t *) calloc(numOfBytes,1);
 
-    int numOfBytes = qdict_get_int(qdict, "numOfBytes");
+    for(int i = length-1, j = 0; i >= 0; i--, j++) {
+        uint8_t hex = (uint8_t)strtol((char[]){val[i], 0}, NULL, 16);
+
+        if (i%2) { // odd
+            membytes[j/2] |= hex;
+        } else { // even
+            membytes[j/2] |= (hex << 4);
+        }
+    }
 
     if (cpu_memory_rw_debug(mon_get_cpu(), addressValue, membytes, numOfBytes , 1) < 0) {
         monitor_printf(mon, "Cannot access memory\n");
@@ -1379,8 +1389,41 @@ static void hmp_inject(Monitor *mon, const QDict *qdict)
         monitor_printf(mon, "Success\n");
     }
 
+    free(membytes);
+
 }
 
+static void hmp_inject_stuckat_value(Monitor *mon, const QDict *qdict)
+{
+    const char *address = qdict_get_str(qdict, "address");
+    hwaddr addressValue = strtoul(address, NULL ,0);
+
+    const char *val = qdict_get_str(qdict, "val");
+    size_t length = strlen(val);
+
+    int numOfBytes = (length % 2 ? (length/2 + 1) : (length/2));
+    uint8_t *membytes = (uint8_t *) calloc(numOfBytes,1);
+
+    for(int i = length-1, j = 0; i >= 0; i--, j++) {
+        uint8_t hex = (uint8_t)strtol((char[]){val[i], 0}, NULL, 16);
+
+        if (i%2) { // odd
+            membytes[j/2] |= hex;
+        } else { // even
+            membytes[j/2] |= (hex << 4);
+        }
+    }
+
+    insert_stuckat_value(addressValue, membytes, numOfBytes);
+}
+
+static void hmp_remove_stuckat(Monitor *mon, const QDict *qdict)
+{
+    const char *address = qdict_get_str(qdict, "address");
+    hwaddr addressValue = strtoul(address, NULL ,0);
+
+    remove_stuckat_value(addressValue);
+}
 
 static void hmp_memory_dump(Monitor *mon, const QDict *qdict)
 {

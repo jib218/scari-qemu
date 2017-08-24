@@ -199,6 +199,7 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     return ret;
 }
 
+
 #ifndef CONFIG_USER_ONLY
 /* Execute the code without caching the generated code. An interpreter
    could be used if available. */
@@ -229,6 +230,8 @@ static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
     tb_unlock();
 }
 #endif
+
+
 
 static void cpu_exec_step(CPUState *cpu)
 {
@@ -336,7 +339,7 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
     //    fault_injection_controller_init(env, (&pc64), NULL, FI_TIME, -1);
     //    pc = pc64;
     // -------------------------------------------------------------------------
-
+    fic_inject(env);
 
     tb = atomic_rcu_read(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)]);
     if (unlikely(!tb || tb->pc != pc || tb->cs_base != cs_base ||
@@ -606,6 +609,8 @@ static inline void cpu_loop_exec_tb(CPUState *cpu, TranslationBlock *tb,
     }
 }
 
+#include "fies/profiler.h"
+
 /* main execution loop */
 
 int cpu_exec(CPUState *cpu)
@@ -651,7 +656,9 @@ int cpu_exec(CPUState *cpu)
             for(;;) {
                 cpu_handle_interrupt(cpu, &last_tb);
                 tb = tb_find(cpu, last_tb, tb_exit);
+                profiler_log_generic("exec tb\n");
                 cpu_loop_exec_tb(cpu, tb, &last_tb, &tb_exit, &sc);
+                profiler_log_generic("end exec tb\n");
                 /* Try to align the host and virtual clocks
                    if the guest is in advance */
                 align_clocks(&sc, cpu);

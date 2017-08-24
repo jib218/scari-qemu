@@ -40,6 +40,7 @@
 
 #include "fies/fault-injection-config.h"
 #include "fies/fault-injection-data-analyzer.h"
+#include "fies/profiler.h"
 
 #ifdef CONFIG_SPICE
 #include <spice/enums.h>
@@ -169,6 +170,12 @@ void hmp_fault_reload(Monitor *mon, const QDict *qdict)
 
   if (fault_library_name)
     free(fault_library_name);
+}
+
+
+void hmp_profiler_flush(Monitor *mon, const QDict *qdict)
+{
+    profiler_flush_files();
 }
 
 void hmp_info_name(Monitor *mon, const QDict *qdict)

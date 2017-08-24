@@ -18,4 +18,8 @@ void fault_injection_controller_init(CPUArchState *env, hwaddr *addr,
 
 void start_automatic_test_process(CPUArchState *env);
 
+
+void fic_inject(CPUArchState *env);
+void fic_flush_pages(CPUArchState *env);
+
 #endif /* FAULT_INJECTION_CONTROLLER_H_ */

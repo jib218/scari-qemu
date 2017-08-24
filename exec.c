@@ -64,6 +64,7 @@
 #endif
 
 #include "fies/fault-injection-controller.h"
+#include "fies/profiler.h"
 
 //#define DEBUG_SUBPAGE
 
@@ -2126,6 +2127,7 @@ static void check_watchpoint(int offset, int len, MemTxAttrs attrs, int flags)
 static MemTxResult watch_mem_read(void *opaque, hwaddr addr, uint64_t *pdata,
                                   unsigned size, MemTxAttrs attrs)
 {
+    error_printf("watch_mem_read\n");
     MemTxResult res;
     uint64_t data;
     int asidx = cpu_asidx_from_attrs(current_cpu, attrs);
@@ -2755,12 +2757,9 @@ MemTxResult address_space_read_full(AddressSpace *as, hwaddr addr,
 MemTxResult address_space_rw(AddressSpace *as, hwaddr addr, MemTxAttrs attrs,
                              uint8_t *buf, int len, bool is_write)
 {
-   // error_report("address space rw: %lu", addr);
     if (is_write) {
-        fault_injection_controller_init(NULL, &addr, (uint32_t*)buf, FI_MEMORY_CONTENT, write_access_type);
         return address_space_write(as, addr, attrs, (uint8_t *)buf, len);
     } else {
-        fault_injection_controller_init(NULL, &addr, (uint32_t*)buf, FI_MEMORY_CONTENT, read_access_type);
         return address_space_read(as, addr, attrs, (uint8_t *)buf, len);
     }
 }
@@ -3119,7 +3118,6 @@ static inline uint32_t address_space_ldl_internal(AddressSpace *as, hwaddr addr,
         qemu_mutex_unlock_iothread();
     }
     rcu_read_unlock();
-    fault_injection_controller_init(NULL, &addr, ((uint32_t*)&val), FI_MEMORY_CONTENT, read_access_type);
     return val;
 }
 
@@ -3174,6 +3172,7 @@ static inline uint64_t address_space_ldq_internal(AddressSpace *as, hwaddr addr,
     bool release_lock = false;
 
     rcu_read_lock();
+
     mr = address_space_translate(as, addr, &addr1, &l,
                                  false);
     if (l < 8 || !memory_access_is_direct(mr, false)) {
@@ -3213,7 +3212,7 @@ static inline uint64_t address_space_ldq_internal(AddressSpace *as, hwaddr addr,
         qemu_mutex_unlock_iothread();
     }
     rcu_read_unlock();
-    fault_injection_controller_init(NULL, &addr, ((uint32_t*)&val), FI_MEMORY_CONTENT, read_access_type);
+
     return val;
 }
 
@@ -3408,7 +3407,6 @@ void address_space_stl_notdirty(AddressSpace *as, hwaddr addr, uint32_t val,
 
 void stl_phys_notdirty(AddressSpace *as, hwaddr addr, uint32_t val)
 {
-    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
     address_space_stl_notdirty(as, addr, val, MEMTXATTRS_UNSPECIFIED, NULL);
 }
 
@@ -3426,7 +3424,6 @@ static inline void address_space_stl_internal(AddressSpace *as,
     MemTxResult r;
     bool release_lock = false;
 
-    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
 
     rcu_read_lock();
     mr = address_space_translate(as, addr, &addr1, &l,
@@ -3537,8 +3534,6 @@ static inline void address_space_stw_internal(AddressSpace *as,
     hwaddr addr1;
     MemTxResult r;
     bool release_lock = false;
-
-    fault_injection_controller_init(NULL, &addr, &val, FI_MEMORY_CONTENT, write_access_type);
 
     rcu_read_lock();
     mr = address_space_translate(as, addr, &addr1, &l, true);
@@ -3673,12 +3668,15 @@ int cpu_memory_rw_debug(CPUState *cpu, target_ulong addr,
     hwaddr phys_addr;
     target_ulong page;
 
+//    error_printf("inside cpu memory rw debug. Len: %i\n", len);
     while (len > 0) {
         int asidx;
         MemTxAttrs attrs;
 
         page = addr & TARGET_PAGE_MASK;
+//        error_printf("Page: %lx\n", page);
         phys_addr = cpu_get_phys_page_attrs_debug(cpu, page, &attrs);
+//        error_printf("Phy address before: %lx \n", phys_addr);
         asidx = cpu_asidx_from_attrs(cpu, attrs);
         /* if no physical page mapped, return an error */
         if (phys_addr == -1)
@@ -3695,6 +3693,8 @@ int cpu_memory_rw_debug(CPUState *cpu, target_ulong addr,
                              MEMTXATTRS_UNSPECIFIED,
                              buf, l, 0);
         }
+//        error_printf("Final phys address: %lx\n", phys_addr);
+
         len -= l;
         buf += l;
         addr += l;

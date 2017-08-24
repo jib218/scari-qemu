@@ -1223,7 +1223,7 @@ static void *qemu_tcg_cpu_thread_fn(void *arg)
     delete_fault_list();
     destroy_id_array();
     destroy_ops_on_cell();
-
+    delete_stuckat_list();
     return NULL;
 }
 

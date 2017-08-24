@@ -127,6 +127,8 @@ int main(int argc, char **argv)
 #include "qapi/qmp/qerror.h"
 #include "sysemu/iothread.h"
 
+#include "fies/profiler.h"
+
 #define MAX_VIRTIO_CONSOLES 1
 #define MAX_SCLP_CONSOLES 1
 
@@ -187,6 +189,7 @@ uint8_t qemu_extra_params_fw[2];
 //default profiling parameters
 unsigned int profile_ram_addresses = 0;
 unsigned int profile_registers = 0;
+unsigned int profile_log_generic = 0;
 
 int icount_align_option;
 
@@ -1934,6 +1937,10 @@ static bool main_loop_should_exit(void)
     if (qemu_shutdown_requested()) {
         qemu_kill_report();
         qapi_event_send_shutdown(&error_abort);
+
+        // Hopefully the best place
+        profiler_close_files();
+
         if (no_shutdown) {
             vm_stop(RUN_STATE_SHUTDOWN);
         } else {
@@ -4090,6 +4097,9 @@ int main(int argc, char **argv, char **envp)
                             profile_ram_addresses = 1;
                             error_report("Profile memory");
                             break;
+                        case 'g':
+                            profile_log_generic = 1;
+                            error_report("Profile generic");
                         default:
                             break;
                     }

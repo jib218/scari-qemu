@@ -103,10 +103,8 @@ static inline DATA_TYPE glue(io_read, SUFFIX)(CPUArchState *env,
                                               uintptr_t retaddr)
 {
     CPUIOTLBEntry *iotlbentry = &env->iotlb[mmu_idx][index];
-
     DATA_TYPE val = io_readx(env, iotlbentry, addr, retaddr, DATA_SIZE);
 
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, read_access_type);
     return val;
 }
 #endif
@@ -120,6 +118,7 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
     unsigned a_bits = get_alignment_bits(get_memop(oi));
     uintptr_t haddr;
     DATA_TYPE res;
+
 
     if (addr & ((1 << a_bits) - 1)) {
         cpu_unaligned_access(ENV_GET_CPU(env), addr, READ_ACCESS_TYPE,
@@ -136,6 +135,8 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
         tlb_addr = env->tlb_table[mmu_idx][index].ADDR_READ;
     }
 
+    fic_inject(env);
+
     /* Handle an IO access.  */
     if (unlikely(tlb_addr & ~TARGET_PAGE_MASK)) {
         if ((addr & (DATA_SIZE - 1)) != 0) {
@@ -146,7 +147,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
            byte ordering.  We should push the LE/BE request down into io.  */
         res = glue(io_read, SUFFIX)(env, mmu_idx, index, addr, retaddr);
         res = TGT_LE(res);
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
         return res;
     }
 
@@ -166,7 +166,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
 
         /* Little-endian combine.  */
         res = (res1 >> shift) | (res2 << ((DATA_SIZE * 8) - shift));
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
         return res;
     }
 
@@ -177,8 +176,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
     res = glue(glue(ld, LSUFFIX), _le_p)((uint8_t *)haddr);
 #endif
 
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
-
     return res;
 }
 
@@ -186,7 +183,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
 WORD_TYPE helper_be_ld_name(CPUArchState *env, target_ulong addr,
                             TCGMemOpIdx oi, uintptr_t retaddr)
 {
-    fault_injection_controller_init(env, (&addr), NULL, FI_MEMORY_ADDR, read_access_type);
     unsigned mmu_idx = get_mmuidx(oi);
     int index = (addr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);
     target_ulong tlb_addr = env->tlb_table[mmu_idx][index].ADDR_READ;
@@ -219,7 +215,6 @@ WORD_TYPE helper_be_ld_name(CPUArchState *env, target_ulong addr,
            byte ordering.  We should push the LE/BE request down into io.  */
         res = glue(io_read, SUFFIX)(env, mmu_idx, index, addr, retaddr);
         res = TGT_BE(res);
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
         return res;
     }
 
@@ -239,13 +234,11 @@ WORD_TYPE helper_be_ld_name(CPUArchState *env, target_ulong addr,
 
         /* Big-endian combine.  */
         res = (res1 << shift) | (res2 >> ((DATA_SIZE * 8) - shift));
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
         return res;
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
     res = glue(glue(ld, LSUFFIX), _be_p)((uint8_t *)haddr);
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&res), FI_MEMORY_CONTENT, read_access_type);
     return res;
 }
 #endif /* DATA_SIZE > 1 */
@@ -277,14 +270,12 @@ static inline void glue(io_write, SUFFIX)(CPUArchState *env,
                                           uintptr_t retaddr)
 {
     CPUIOTLBEntry *iotlbentry = &env->iotlb[mmu_idx][index];
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
     return io_writex(env, iotlbentry, val, addr, retaddr, DATA_SIZE);
 }
 
 void helper_le_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
                        TCGMemOpIdx oi, uintptr_t retaddr)
 {
-    //fault_injection_controller_init(env, (&addr), NULL, FI_MEMORY_ADDR, write_access_type);
     unsigned mmu_idx = get_mmuidx(oi);
     int index = (addr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);
     target_ulong tlb_addr = env->tlb_table[mmu_idx][index].addr_write;
@@ -314,8 +305,8 @@ void helper_le_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
         /* ??? Note that the io helpers always read data in the target
            byte ordering.  We should push the LE/BE request down into io.  */
         val = TGT_LE(val);
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
         glue(io_write, SUFFIX)(env, mmu_idx, index, val, addr, retaddr);
+        fic_inject(env);
         return;
     }
 
@@ -344,29 +335,28 @@ void helper_le_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
         for (i = 0; i < DATA_SIZE; ++i) {
             /* Little-endian extract.  */
             uint8_t val8 = val >> (i * 8);
-            hwaddr temp = addr + i;
-            fault_injection_controller_init(env, (&temp), ((uint32_t*)&val8), FI_MEMORY_CONTENT, write_access_type);
             glue(helper_ret_stb, MMUSUFFIX)(env, addr + i, val8,
                                             oi, retaddr);
         }
+        fic_inject(env);
         return;
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
+
 #if DATA_SIZE == 1
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
     glue(glue(st, SUFFIX), _p)((uint8_t *)haddr, val);
 #else
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
     glue(glue(st, SUFFIX), _le_p)((uint8_t *)haddr, val);
 #endif
+
+    fic_inject(env);
 }
 
 #if DATA_SIZE > 1
 void helper_be_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
                        TCGMemOpIdx oi, uintptr_t retaddr)
 {
-    //fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_ADDR, write_access_type);
     unsigned mmu_idx = get_mmuidx(oi);
     int index = (addr >> TARGET_PAGE_BITS) & (CPU_TLB_SIZE - 1);
     target_ulong tlb_addr = env->tlb_table[mmu_idx][index].addr_write;
@@ -396,7 +386,6 @@ void helper_be_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
         /* ??? Note that the io helpers always read data in the target
            byte ordering.  We should push the LE/BE request down into io.  */
         val = TGT_BE(val);
-        fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
         glue(io_write, SUFFIX)(env, mmu_idx, index, val, addr, retaddr);
         return;
     }
@@ -426,7 +415,6 @@ void helper_be_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
         for (i = 0; i < DATA_SIZE; ++i) {
             /* Big-endian extract.  */
             uint8_t val8 = val >> (((DATA_SIZE - 1) * 8) - (i * 8));
-            fault_injection_controller_init(env, (&addr), ((uint32_t*)&val8), FI_MEMORY_CONTENT, write_access_type);
             glue(helper_ret_stb, MMUSUFFIX)(env, addr + i, val8,
                                             oi, retaddr);
         }
@@ -434,7 +422,6 @@ void helper_be_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
-    fault_injection_controller_init(env, (&addr), ((uint32_t*)&val), FI_MEMORY_CONTENT, write_access_type);
     glue(glue(st, SUFFIX), _be_p)((uint8_t *)haddr, val);
 }
 #endif /* DATA_SIZE > 1 */

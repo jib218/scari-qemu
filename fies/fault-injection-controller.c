@@ -222,7 +222,7 @@ static void fault_injection_controller_bf(CPUArchState *env, hwaddr *addr,
       			do_inject_memory_register(env, addr, fi_info);
 
       			if (fi_info.fault_on_register)
-      				incr_num_injected_faults(fault->id, "reg trans");
+      				incr_num_injected_faults(fault->id, "reg trans"); 
       			else
       				incr_num_injected_faults(fault->id, "ram trans");
       		}
@@ -4018,8 +4018,9 @@ void fault_injection_controller_init(CPUArchState *env, hwaddr *addr,
 {
     //FaultList *fault;
     //int element = 0;
-
+   // error_printf("inside fault injection controller init \n");
     profiler_log(addr, value, access_type);
+ //   error_printf("after profiler log\n");
 
 	  if (*addr == address_in_use)
 		  return;
@@ -4044,7 +4045,7 @@ void fault_injection_controller_init(CPUArchState *env, hwaddr *addr,
 
   		for (; next_cpu != NULL && !exit_request; next_cpu = CPU_NEXT(next_cpu))
   		{
-  			CPUState *cpu = next_cpu;
+            CPUState *cpu = next_cpu;
   			CPUArchState *env = cpu->env_ptr;
 
   			fault_injection_controller_memory_content(env, addr, value, access_type);
@@ -4110,4 +4111,42 @@ void start_automatic_test_process(CPUArchState *env)
 
 	 //   qmp_quit(NULL);
 	}
+}
+
+void fic_inject(CPUArchState *env)
+{
+    CPUState * cpu = 0;
+    if (env == 0) {
+        cpu = current_cpu;
+    } else {
+        cpu = ENV_GET_CPU(env);
+    }
+    profiler_log_generic("fic_inject\n");
+    StuckAtList *curr = stuckAtHead;
+    while(curr) {
+        cpu_memory_rw_debug(cpu, curr->vaddr, curr->membytes, curr->numofbytes, 1);
+//        if(vpage == (curr->vaddr & TARGET_PAGE_MASK)) {
+//        }
+
+        curr = curr->next;
+    }
+
+}
+
+
+void fic_flush_pages(CPUArchState *env)
+{
+    CPUState * cpu = 0;
+    if (env == 0) {
+        cpu = current_cpu;
+    } else {
+        cpu = ENV_GET_CPU(env);
+    }
+
+    StuckAtList *curr = stuckAtHead;
+    while(curr) {
+        tlb_flush_page(cpu, curr->vaddr);
+
+        curr = curr->next;
+    }
 }

@@ -37,17 +37,57 @@ STEXI
 ETEXI
 
     {
-        .name       = "inject",
-        .args_type  = "address:s,val:s,numOfBytes:i",
-        .params     = "address val numOfBytes",
+        .name       = "inject_value",
+        .args_type  = "address:s,val:s",
+        .params     = "address val",
         .help       = "set value of virtual address",
-        .cmd = hmp_inject,
+        .cmd = hmp_inject_value,
     },
 
 STEXI
-@item inject @var{address} @var{value}
-@findex inject
+@item inject_value @var{address} @var{val}
+@findex inject_value
 Set an address to a value.
+ETEXI
+
+    {
+        .name       = "inject_stuckat_value",
+        .args_type  = "address:s,val:s",
+        .params     = "address val",
+        .help       = "set stuckat value of virtual address",
+        .cmd = hmp_inject_stuckat_value,
+    },
+STEXI
+@item inject_stuckat_value @var{address} @var{val}
+@findex inject_stuckat_value
+Set an address to a stuckat value.
+ETEXI
+
+    {
+        .name       = "remove_stuckat",
+        .args_type  = "address:s",
+        .params     = "address",
+        .help       = "remove a stuckat address",
+        .cmd = hmp_remove_stuckat,
+    },
+STEXI
+@item remove_stuckat @var{address}
+@findex remove_stuckat
+Remove a stuckat address.
+ETEXI
+
+    {
+        .name       = "profiler_flush",
+        .args_type  = "",
+        .params     = "",
+        .help       = "flushes the used profiler files",
+        .cmd = hmp_profiler_flush,
+    },
+
+STEXI
+@item profiler_flush
+@findex profiler_flush
+Flushes the used profiler files.
 ETEXI
 
     {
