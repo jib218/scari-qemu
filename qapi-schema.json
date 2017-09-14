@@ -20,63 +20,6 @@
 # QAPI introspection
 { 'include': 'qapi/introspect.json' }
 
-
-##
-# @FaultInfo:
-#
-# A description of the faults.
-#
-# @component:   			defines the component, where a fault should be injected
-#
-# @mode:   					defines which fault should be injected
-#
-# @target:   				defines the target point
-#
-# @type:   					defines if the fault is permanent, transient or intermittend
-#
-# @params.mask:   			defines bits, which should be changed
-#
-# @params.address: 			the address of the bit, which should be changed
-#
-# @params.instruction:   	defines the address of the replaced instruction
-#
-# @is_active:   			shows if the fault is currently active
-#
-# Since: 2.8.0
-##
-{
-  'struct': 'FaultParams',
-  'data': {'mask': 'int', 'address': 'int', 'cf_address': 'int', 'instruction': 'int', 'set_bit': 'int'}
-}
-
-{ 'struct': 'FaultInfo',
-  'data': {'params': 'FaultParams',
-           'component': 'str',
-           'mode': 'str',
-           'target': 'str',
-           'type': 'str',
-           'duration': 'str',
-           'interval': 'str',
-           'id': 'int',
-           'trigger': 'str',
-           'timer': 'str',
-           'is_active': 'int'}
-}
-
-##
-# @query-faults:
-#
-# Returns the fault informations.
-#
-# Returns:  A @FaultInfoList object describing the injected faults.
-#
-# Since: 2.8.0
-##
-{ 'command': 'query-faults', 'returns': ['FaultInfo']}
-
-{ 'command': 'fault-reload',
-  'data': { 'filename': 'str'} }
-
 ##
 # @qmp_capabilities:
 #

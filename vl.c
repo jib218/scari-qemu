@@ -27,9 +27,6 @@
 #include "qemu/help_option.h"
 #include "qemu/uuid.h"
 
-#include "fies/fault-injection-config.h"
-#include "fies/fault-injection-collector.h"
-
 #ifdef CONFIG_SECCOMP
 #include "sysemu/seccomp.h"
 #endif
@@ -187,8 +184,6 @@ size_t boot_splash_filedata_size;
 uint8_t qemu_extra_params_fw[2];
 
 //default profiling parameters
-unsigned int profile_ram_addresses = 0;
-unsigned int profile_registers = 0;
 unsigned int profile_log_generic = 0;
 
 int icount_align_option;
@@ -550,14 +545,6 @@ static QemuOptsList qemu_iscsi_opts = {
             .name = "timeout",
             .type = QEMU_OPT_NUMBER,
             .help = "Request timeout in seconds (default 0 = no timeout)",
-        },{
-            .name = "fi",
-            .type = QEMU_OPT_BOOL,
-            .help = "Set on/off to enable/disable fault injection",
-        },{
-            .name = "profile",
-            .type = QEMU_OPT_BOOL,
-            .help = "Profile memory/register usage of binary",
         },
         { /* end of list */ }
     },
@@ -3018,14 +3005,7 @@ static int global_init_func(void *opaque, QemuOpts *opts, Error **errp)
 
 int main(int argc, char **argv, char **envp)
 {
-    char *sep_str, *opt_str;
-    int param_num = 0;
-    enum parameter_names
-    {
-        fault_library_path
-    };
-
-
+    char *opt_str;
     int i;
     int snapshot, linux_boot;
     const char *initrd_filename;
@@ -4079,8 +4059,7 @@ int main(int argc, char **argv, char **envp)
                 if (!optarg)
                 {
                     //if no options are given all profiling functions are activated
-                    profile_ram_addresses = 1;
-                    profile_registers = 1;
+                    profile_log_generic = 1;
                 }
                 opt_str = (char*)malloc((strlen(optarg)+1) * sizeof(char));
                 strcpy(opt_str, optarg);
@@ -4089,14 +4068,6 @@ int main(int argc, char **argv, char **envp)
                 {
                     char c = opt_str[i];
                     switch (c) {
-                        case 'r':
-                            profile_registers = 1;
-                            error_report("Profile registers");
-                            break;
-                        case 'm':
-                            profile_ram_addresses = 1;
-                            error_report("Profile memory");
-                            break;
                         case 'g':
                             profile_log_generic = 1;
                             error_report("Profile generic");
@@ -4104,38 +4075,6 @@ int main(int argc, char **argv, char **envp)
                             break;
                     }
                 }
-                break;
-            case QEMU_OPTION_fi:
-                /*
-                 * no automation!
-                 */
-                error_report("QEMU started with Fault Injection");
-                if (!optarg)
-                {
-                    set_do_fault_injection(1);
-                    break;
-                }
-                opt_str = (char*)malloc((strlen(optarg)+1) * sizeof(char));
-                strcpy(opt_str, optarg);
-                sep_str = strtok(opt_str, ",");
-                for (param_num = 0; sep_str != NULL; param_num++)
-                {
-                    switch(param_num)
-                    {
-                    case fault_library_path:
-                        fault_library_name = (char*)malloc((strlen(sep_str) + 1) * sizeof(char));
-                        strcpy(fault_library_name, sep_str);
-                        error_report("Fault libary name: %s",fault_library_name);
-                        break;
-                    default:
-                        fprintf(stderr, "Too many parameters specified!\n");
-                        error_report("Too many parameters specified!\n");
-                        break;
-                    }
-                    sep_str = strtok(NULL, ",");
-                }
-                set_do_fault_injection(1);
-                free(opt_str);
                 break;
             default:
                 os_parse_cmd_args(popt->index, optarg);

@@ -283,7 +283,6 @@ opengl=""
 opengl_dmabuf="no"
 avx2_opt="no"
 zlib="yes"
-xml2="yes"
 lzo=""
 snappy=""
 bzip2=""
@@ -1855,24 +1854,6 @@ EOF
     fi
 fi
 LIBS="$LIBS -lz"
-
-#########################################
-# xml2 check
-
-if test "$xml2" != "no" ; then
-    cat > $TMPC << EOF
-#include <libxml/xmlstring.h>
-int main(void) { xmlStrcmp((const xmlChar *) "id", (const xmlChar *) "id"); return 0; }
-EOF
-    if compile_prog $(xml2-config --cflags) "-lxml2" ; then
-        :
-    else
-        error_exit "xml2 check failed" \
-            "Make sure to have the xml2 libs and headers installed."
-    fi
-fi
-LIBS="$LIBS -lxml2"
-QEMU_CFLAGS="$(xml2-config --cflags) $QEMU_CFLAGS"
 
 ##########################################
 # lzo check
@@ -5183,7 +5164,7 @@ if test "$mingw32" = "yes" ; then
     echo "CONFIG_QGA_NTDDDISK=y" >> $config_host_mak
   fi
   if test "$guest_agent_msi" = "yes"; then
-    echo "QEMU_GA_MSI_ENABLED=yes" >> $config_host_mak
+    echo "QEMU_GA_MSI_ENABLED=yes" >> $config_host_mak  
     echo "QEMU_GA_MSI_MINGW_DLL_PATH=${QEMU_GA_MSI_MINGW_DLL_PATH}" >> $config_host_mak
     echo "QEMU_GA_MSI_WITH_VSS=${QEMU_GA_MSI_WITH_VSS}" >> $config_host_mak
     echo "QEMU_GA_MSI_ARCH=${QEMU_GA_MSI_ARCH}" >> $config_host_mak

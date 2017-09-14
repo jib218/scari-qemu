@@ -63,9 +63,6 @@
 #include "qemu/mmap-alloc.h"
 #endif
 
-#include "fies/fault-injection-controller.h"
-#include "fies/profiler.h"
-
 //#define DEBUG_SUBPAGE
 
 #if !defined(CONFIG_USER_ONLY)
@@ -239,8 +236,6 @@ static uint32_t phys_map_node_alloc(PhysPageMap *map, bool leaf)
     uint32_t ret;
     PhysPageEntry e;
     PhysPageEntry *p;
-
-    //error_report("phys_map_node_alloc");
 
     ret = map->nodes_nb++;
     p = map->nodes[ret];
@@ -2127,7 +2122,6 @@ static void check_watchpoint(int offset, int len, MemTxAttrs attrs, int flags)
 static MemTxResult watch_mem_read(void *opaque, hwaddr addr, uint64_t *pdata,
                                   unsigned size, MemTxAttrs attrs)
 {
-    error_printf("watch_mem_read\n");
     MemTxResult res;
     uint64_t data;
     int asidx = cpu_asidx_from_attrs(current_cpu, attrs);
@@ -3172,7 +3166,6 @@ static inline uint64_t address_space_ldq_internal(AddressSpace *as, hwaddr addr,
     bool release_lock = false;
 
     rcu_read_lock();
-
     mr = address_space_translate(as, addr, &addr1, &l,
                                  false);
     if (l < 8 || !memory_access_is_direct(mr, false)) {
@@ -3212,7 +3205,6 @@ static inline uint64_t address_space_ldq_internal(AddressSpace *as, hwaddr addr,
         qemu_mutex_unlock_iothread();
     }
     rcu_read_unlock();
-
     return val;
 }
 
@@ -3423,7 +3415,6 @@ static inline void address_space_stl_internal(AddressSpace *as,
     hwaddr addr1;
     MemTxResult r;
     bool release_lock = false;
-
 
     rcu_read_lock();
     mr = address_space_translate(as, addr, &addr1, &l,
@@ -3668,15 +3659,12 @@ int cpu_memory_rw_debug(CPUState *cpu, target_ulong addr,
     hwaddr phys_addr;
     target_ulong page;
 
-//    error_printf("inside cpu memory rw debug. Len: %i\n", len);
     while (len > 0) {
         int asidx;
         MemTxAttrs attrs;
 
         page = addr & TARGET_PAGE_MASK;
-//        error_printf("Page: %lx\n", page);
         phys_addr = cpu_get_phys_page_attrs_debug(cpu, page, &attrs);
-//        error_printf("Phy address before: %lx \n", phys_addr);
         asidx = cpu_asidx_from_attrs(cpu, attrs);
         /* if no physical page mapped, return an error */
         if (phys_addr == -1)
@@ -3693,8 +3681,6 @@ int cpu_memory_rw_debug(CPUState *cpu, target_ulong addr,
                              MEMTXATTRS_UNSPECIFIED,
                              buf, l, 0);
         }
-//        error_printf("Final phys address: %lx\n", phys_addr);
-
         len -= l;
         buf += l;
         addr += l;

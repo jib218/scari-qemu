@@ -103,9 +103,7 @@ static inline DATA_TYPE glue(io_read, SUFFIX)(CPUArchState *env,
                                               uintptr_t retaddr)
 {
     CPUIOTLBEntry *iotlbentry = &env->iotlb[mmu_idx][index];
-    DATA_TYPE val = io_readx(env, iotlbentry, addr, retaddr, DATA_SIZE);
-
-    return val;
+    return io_readx(env, iotlbentry, addr, retaddr, DATA_SIZE);
 }
 #endif
 
@@ -118,7 +116,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
     unsigned a_bits = get_alignment_bits(get_memop(oi));
     uintptr_t haddr;
     DATA_TYPE res;
-
 
     if (addr & ((1 << a_bits) - 1)) {
         cpu_unaligned_access(ENV_GET_CPU(env), addr, READ_ACCESS_TYPE,
@@ -175,7 +172,6 @@ WORD_TYPE helper_le_ld_name(CPUArchState *env, target_ulong addr,
 #else
     res = glue(glue(ld, LSUFFIX), _le_p)((uint8_t *)haddr);
 #endif
-
     return res;
 }
 
@@ -343,7 +339,6 @@ void helper_le_st_name(CPUArchState *env, target_ulong addr, DATA_TYPE val,
     }
 
     haddr = addr + env->tlb_table[mmu_idx][index].addend;
-
 #if DATA_SIZE == 1
     glue(glue(st, SUFFIX), _p)((uint8_t *)haddr, val);
 #else

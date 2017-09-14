@@ -79,8 +79,6 @@
 #include "qemu/cutils.h"
 #include "qapi/qmp/dispatch.h"
 
-#include "fies/fault-injection-collector.h"
-#include "fies/fault-injection-config.h"
 #include "fies/fault-injection-library.h"
 
 #if defined(TARGET_S390X)
@@ -252,7 +250,7 @@ void monitor_read_command(Monitor *mon, int show_prompt)
     if (!mon->rs)
         return;
 
-    readline_start(mon->rs, "(qemu-fies) ", 0, monitor_command_cb, NULL);
+    readline_start(mon->rs, "(scari-qemu) ", 0, monitor_command_cb, NULL);
     if (show_prompt)
         readline_show_prompt(mon->rs);
 }
@@ -339,7 +337,6 @@ static void monitor_puts(Monitor *mon, const char *str)
             break;
         if (c == '\n') {
             qstring_append_chr(mon->outbuf, '\r');
-            data_collector_write(qstring_get_str(mon->outbuf));
         }
         qstring_append_chr(mon->outbuf, c);
         if (c == '\n') {
@@ -1308,7 +1305,6 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
         if (is_physical) {
             cpu_physical_memory_read(addr, buf, l);
         } else {
-            error_printf("cpu memory rw debug\n");
             if (cpu_memory_rw_debug(mon_get_cpu(), addr, buf, l, 0) < 0) {
                 monitor_printf(mon, " Cannot access memory\n");
                 break;
@@ -1319,23 +1315,18 @@ static void memory_dump(Monitor *mon, int count, int format, int wsize,
             switch(wsize) {
             default:
             case 1:
-                error_printf("Case 1");
                 v = ldub_p(buf + i);
                 break;
             case 2:
-                error_printf("Case 2");
                 v = lduw_p(buf + i);
                 break;
             case 4:
-                error_printf("Case 4");
                 v = (uint32_t)ldl_p(buf + i);
                 break;
             case 8:
                 v = ldq_p(buf + i);
-                error_printf("Case 8");
                 break;
             }
-            error_printf("V: %lx\n", v);
             monitor_printf(mon, " ");
             switch(format) {
             case 'o':
@@ -1369,7 +1360,6 @@ static void hmp_inject_value(Monitor *mon, const QDict *qdict)
 
     const char *val = qdict_get_str(qdict, "val");
     size_t length = strlen(val);
-
     int numOfBytes = (length % 2 ? (length/2 + 1) : (length/2));
     uint8_t *membytes = (uint8_t *) calloc(numOfBytes,1);
 
@@ -1386,6 +1376,7 @@ static void hmp_inject_value(Monitor *mon, const QDict *qdict)
     if (cpu_memory_rw_debug(mon_get_cpu(), addressValue, membytes, numOfBytes , 1) < 0) {
         monitor_printf(mon, "Cannot access memory\n");
     } else {
+        monitor_printf(mon, "Number of overwritten bytes: %i\n", numOfBytes);
         monitor_printf(mon, "Success\n");
     }
 
@@ -1431,7 +1422,7 @@ static void hmp_memory_dump(Monitor *mon, const QDict *qdict)
     int format = qdict_get_int(qdict, "format");
     int size = qdict_get_int(qdict, "size");
     target_long addr = qdict_get_int(qdict, "addr");
-    error_printf("format %c\n", format);
+
     memory_dump(mon, count, format, size, addr, 0);
 }
 
@@ -2566,11 +2557,11 @@ static int default_fmt_size = 4;
 static int is_valid_option(const char *c, const char *typestr)
 {
     char option[3];
-
+  
     option[0] = '-';
     option[1] = *c;
     option[2] = '\0';
-
+  
     typestr = strstr(typestr, option);
     return (typestr != NULL);
 }
@@ -2935,7 +2926,7 @@ static QDict *monitor_parse_arguments(Monitor *mon,
                     p++;
                     if(c != *p) {
                         if(!is_valid_option(p, typestr)) {
-
+                  
                             monitor_printf(mon, "%s: unsupported option -%c\n",
                                            cmd->name, *p);
                             goto fail;
@@ -3976,7 +3967,7 @@ static void monitor_event(void *opaque, int event)
         break;
 
     case CHR_EVENT_OPENED:
-        monitor_printf(mon, "QEMU-FIES %s monitor - type 'help' for more "
+        monitor_printf(mon, "SCARI-QEMU %s monitor - type 'help' for more "
                        "information\n", QEMU_VERSION);
         if (!mon->mux_out) {
             readline_restart(mon->rs);
@@ -4059,17 +4050,6 @@ void monitor_init(CharDriverState *chr, int flags)
 {
     static int is_first_init = 1;
     Monitor *mon;
-
-    if (get_do_fault_injection())
-    {
-    	data_collector = fopen(DATA_COLLECTOR_FILENAME, "w");
-    	if (data_collector == NULL)
-    	{
-            fprintf(stderr, "Error opening file!\n");
-    	    exit(1);
-    	}
-    	fclose(data_collector);
-    }
 
     if (is_first_init) {
         monitor_qapi_event_init();

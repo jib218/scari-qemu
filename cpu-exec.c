@@ -34,10 +34,7 @@
 #endif
 #include "sysemu/replay.h"
 
-// -------------------------------------------------------------------------
 #include "fies/fault-injection-controller.h"
-// -------------------------------------------------------------------------
-
 
 /* -icount align implementation. */
 
@@ -199,7 +196,6 @@ static inline tcg_target_ulong cpu_tb_exec(CPUState *cpu, TranslationBlock *itb)
     return ret;
 }
 
-
 #ifndef CONFIG_USER_ONLY
 /* Execute the code without caching the generated code. An interpreter
    could be used if available. */
@@ -230,8 +226,6 @@ static void cpu_exec_nocache(CPUState *cpu, int max_cycles,
     tb_unlock();
 }
 #endif
-
-
 
 static void cpu_exec_step(CPUState *cpu)
 {
@@ -332,13 +326,6 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
        is executed. */
     cpu_get_tb_cpu_state(env, &pc, &cs_base, &flags);
 
-    // -------------------------------------------------------------------------
-    // According to Andrea useless
-    // start_automatic_test_process(env);
-    //    uint64_t pc64 = pc;
-    //    fault_injection_controller_init(env, (&pc64), NULL, FI_TIME, -1);
-    //    pc = pc64;
-    // -------------------------------------------------------------------------
     fic_inject(env);
 
     tb = atomic_rcu_read(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)]);
