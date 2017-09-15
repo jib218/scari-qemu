@@ -1,7 +1,3 @@
-qemu-x86-fies.config
-qemu-x86-fies.creator
-qemu-x86-fies.files
-qemu-x86-fies.includes
 /config-devices.*
 /config-all-devices.*
 /config-all-disas.*

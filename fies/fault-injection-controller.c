@@ -12,9 +12,10 @@ void fic_inject(CPUArchState *env)
     } else {
         cpu = ENV_GET_CPU(env);
     }
-    profiler_log_generic("fic_inject\n");
+
     StuckAtList *curr = stuckAtHead;
     while(curr) {
+        profiler_log_generic("fic_inject\n");
         cpu_memory_rw_debug(cpu, curr->vaddr, curr->membytes, curr->numofbytes, 1);
 
         curr = curr->next;

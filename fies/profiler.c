@@ -7,20 +7,18 @@ FILE *outfile_generic;
 
 void profiler_flush_files(void)
 {
-    error_printf("profiler flushes files\n");
-
     if (open_generic_file)
     {
+        error_printf("profiler flushes generic file\n");
         fflush(outfile_generic);
     }
 }
 
 void profiler_close_files(void)
 {
-    error_printf("profiler closes files\n");
-
     if (open_generic_file)
     {
+        error_printf("profiler closes generic file\n");
         fclose(outfile_generic);
         open_generic_file = 0;
     }
