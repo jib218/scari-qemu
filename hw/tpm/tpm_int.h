@@ -30,6 +30,9 @@ struct TPMState {
     char *backend;
     TPMBackend *be_driver;
     TPMVersion be_tpm_version;
+
+    QemuMutex state_lock;
+    QemuCond cmd_complete;
 };
 
 #define TPM(obj) OBJECT_CHECK(TPMState, (obj), TYPE_TPM_TIS)
@@ -61,6 +64,7 @@ struct tpm_resp_hdr {
 #define TPM_TAG_RSP_AUTH1_COMMAND 0xc5
 #define TPM_TAG_RSP_AUTH2_COMMAND 0xc6
 
+#define TPM_SUCCESS               0
 #define TPM_FAIL                  9
 
 #define TPM_ORD_ContinueSelfTest  0x53
