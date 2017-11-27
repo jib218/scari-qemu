@@ -10,6 +10,8 @@ struct StuckAt {
     uint8_t *membytes;
     int numofbytes;
 
+    uint8_t *cache;
+
     struct StuckAt *next;
 };
 

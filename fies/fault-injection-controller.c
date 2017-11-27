@@ -16,7 +16,18 @@ void fic_inject(CPUArchState *env)
     StuckAtList *curr = stuckAtHead;
     while(curr) {
         profiler_log_generic("fic_inject\n");
-        cpu_memory_rw_debug(cpu, curr->vaddr, curr->membytes, curr->numofbytes, 1);
+
+        memset(curr->cache, 0, curr->numofbytes);
+
+        if(cpu_memory_rw_debug(cpu, curr->vaddr, curr->cache, curr->numofbytes, 0) < 0) {
+            curr = curr->next;
+            continue;
+        }
+
+        for(int currByte = 0; currByte < curr->numofbytes; currByte ++)
+            curr->cache[currByte] ^= curr->membytes[currByte];
+
+        cpu_memory_rw_debug(cpu, curr->vaddr, curr->cache, curr->numofbytes, 1);
 
         curr = curr->next;
     }

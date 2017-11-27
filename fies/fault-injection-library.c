@@ -10,6 +10,7 @@ void insert_stuckat_value(hwaddr vaddr, uint8_t *membytes, int numofbytes)
     ptr->vaddr = vaddr;
     ptr->membytes = membytes;
     ptr->numofbytes = numofbytes;
+    ptr->cache = (uint8_t *) malloc( sizeof(uint8_t) * numofbytes);
 
     if(stuckAtHead == 0) {
         ptr->next = 0;
@@ -30,6 +31,7 @@ void remove_stuckat_value(hwaddr vaddr)
     if(curr->vaddr == vaddr) {
         stuckAtHead = curr->next;
         free(curr->membytes);
+        free(curr->cache);
         free(curr);
         return;
     }
@@ -40,6 +42,7 @@ void remove_stuckat_value(hwaddr vaddr)
           StuckAtList *tmp = curr->next;
           curr->next = tmp->next;
           free(tmp->membytes);
+          free(tmp->cache);
           free(tmp);
           break;
         }
@@ -55,6 +58,7 @@ void delete_stuckat_list(void)
     {
         stuckAtHead = ptr->next;
         free(ptr->membytes);
+        free(ptr->cache);
         free(ptr);
     }
 }
