@@ -355,7 +355,7 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
         }
 
         /* We add the TB in the virtual pc hash table for the fast lookup */
-        atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
+        //atomic_set(&cpu->tb_jmp_cache[tb_jmp_cache_hash_func(pc)], tb);
     }
 #ifndef CONFIG_USER_ONLY
     /* We don't take care of direct jumps when address mapping changes in
@@ -367,15 +367,15 @@ static inline TranslationBlock *tb_find(CPUState *cpu,
     }
 #endif
     /* See if we can patch the calling TB. */
-    if (last_tb && !qemu_loglevel_mask(CPU_LOG_TB_NOCHAIN)) {
-        if (!have_tb_lock) {
-            tb_lock();
-            have_tb_lock = true;
-        }
-        if (!tb->invalid) {
-            tb_add_jump(last_tb, tb_exit, tb);
-        }
-    }
+//    if (last_tb && !qemu_loglevel_mask(CPU_LOG_TB_NOCHAIN)) {
+//        if (!have_tb_lock) {
+//            tb_lock();
+//            have_tb_lock = true;
+//        }
+//        if (!tb->invalid) {
+         //   tb_add_jump(last_tb, tb_exit, tb);
+//        }
+//    }
     if (have_tb_lock) {
         tb_unlock();
     }
