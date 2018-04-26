@@ -2,7 +2,7 @@
 
 This is a hacked qemu for research purposes. Currently it supports to inject
 values into memory areas and to simulate stuckat memory cells. This is based
-on [FIES](https://github.com/ahoeller/fies), but ported to qemu version 2.8
+on [FIES](https://github.com/ahoeller/fies), but ported to qemu version 2.11.1
 and with easier to use hmp commands. In general, this should work with all
 architectures supported by qemu, however we only tested it with x86_64-softmmu.
 
