@@ -36,6 +36,7 @@
 #include "hw/timer/mc146818rtc.h"
 #include "hw/xen/xen.h"
 #include "sysemu/kvm.h"
+#include "kvm_i386.h"
 #include "hw/kvm/clock.h"
 #include "hw/pci-host/q35.h"
 #include "exec/address-spaces.h"
@@ -46,7 +47,7 @@
 #include "hw/ide/ahci.h"
 #include "hw/usb.h"
 #include "qemu/error-report.h"
-#include "migration/migration.h"
+#include "sysemu/numa.h"
 
 /* ICH9 AHCI has 6 ports */
 #define MAX_SATA_PORTS     6
@@ -100,9 +101,11 @@ static void pc_q35_init(MachineState *machine)
         lowmem = pcms->max_ram_below_4g;
         if (machine->ram_size - lowmem > lowmem &&
             lowmem & ((1ULL << 30) - 1)) {
-            error_report("Warning: Large machine and max_ram_below_4g(%"PRIu64
-                         ") not a multiple of 1G; possible bad performance.",
-                         pcms->max_ram_below_4g);
+            warn_report("There is possibly poor performance as the ram size "
+                        " (0x%" PRIx64 ") is more then twice the size of"
+                        " max-ram-below-4g (%"PRIu64") and"
+                        " max-ram-below-4g is not a multiple of 1G.",
+                        (uint64_t)machine->ram_size, pcms->max_ram_below_4g);
         }
     }
 
@@ -227,32 +230,39 @@ static void pc_q35_init(MachineState *machine)
 
     /* init basic PC hardware */
     pc_basic_device_init(isa_bus, pcms->gsi, &rtc_state, !mc->no_floppy,
-                         (pcms->vmport != ON_OFF_AUTO_ON), 0xff0104);
+                         (pcms->vmport != ON_OFF_AUTO_ON), pcms->pit,
+                         0xff0104);
 
     /* connect pm stuff to lpc */
     ich9_lpc_pm_init(lpc, pc_machine_is_smm_enabled(pcms));
 
-    /* ahci and SATA device, for q35 1 ahci controller is built-in */
-    ahci = pci_create_simple_multifunction(host_bus,
-                                           PCI_DEVFN(ICH9_SATA1_DEV,
-                                                     ICH9_SATA1_FUNC),
-                                           true, "ich9-ahci");
-    idebus[0] = qdev_get_child_bus(&ahci->qdev, "ide.0");
-    idebus[1] = qdev_get_child_bus(&ahci->qdev, "ide.1");
-    g_assert(MAX_SATA_PORTS == ICH_AHCI(ahci)->ahci.ports);
-    ide_drive_get(hd, ICH_AHCI(ahci)->ahci.ports);
-    ahci_ide_create_devs(ahci, hd);
+    if (pcms->sata) {
+        /* ahci and SATA device, for q35 1 ahci controller is built-in */
+        ahci = pci_create_simple_multifunction(host_bus,
+                                               PCI_DEVFN(ICH9_SATA1_DEV,
+                                                         ICH9_SATA1_FUNC),
+                                               true, "ich9-ahci");
+        idebus[0] = qdev_get_child_bus(&ahci->qdev, "ide.0");
+        idebus[1] = qdev_get_child_bus(&ahci->qdev, "ide.1");
+        g_assert(MAX_SATA_PORTS == ahci_get_num_ports(ahci));
+        ide_drive_get(hd, ahci_get_num_ports(ahci));
+        ahci_ide_create_devs(ahci, hd);
+    } else {
+        idebus[0] = idebus[1] = NULL;
+    }
 
     if (machine_usb(machine)) {
         /* Should we create 6 UHCI according to ich9 spec? */
         ehci_create_ich9_with_companions(host_bus, 0x1d);
     }
 
-    /* TODO: Populate SPD eeprom data.  */
-    smbus_eeprom_init(ich9_smb_init(host_bus,
-                                    PCI_DEVFN(ICH9_SMB_DEV, ICH9_SMB_FUNC),
-                                    0xb100),
-                      8, NULL, 0);
+    if (pcms->smbus) {
+        /* TODO: Populate SPD eeprom data.  */
+        smbus_eeprom_init(ich9_smb_init(host_bus,
+                                        PCI_DEVFN(ICH9_SMB_DEV, ICH9_SMB_FUNC),
+                                        0xb100),
+                          8, NULL, 0);
+    }
 
     pc_cmos_init(pcms, idebus[0], idebus[1], rtc_state);
 
@@ -285,7 +295,6 @@ static void pc_q35_machine_options(MachineClass *m)
 {
     m->family = "pc_q35";
     m->desc = "Standard PC (Q35 + ICH9, 2009)";
-    m->hot_add_cpu = pc_hot_add_cpu;
     m->units_per_default_bus = 1;
     m->default_machine_opts = "firmware=bios-256k.bin";
     m->default_display = "std";
@@ -294,10 +303,40 @@ static void pc_q35_machine_options(MachineClass *m)
     m->max_cpus = 288;
 }
 
-static void pc_q35_2_8_machine_options(MachineClass *m)
+static void pc_q35_2_11_machine_options(MachineClass *m)
 {
     pc_q35_machine_options(m);
     m->alias = "q35";
+}
+
+DEFINE_Q35_MACHINE(v2_11, "pc-q35-2.11", NULL,
+                   pc_q35_2_11_machine_options);
+
+static void pc_q35_2_10_machine_options(MachineClass *m)
+{
+    pc_q35_2_11_machine_options(m);
+    m->alias = NULL;
+    SET_MACHINE_COMPAT(m, PC_COMPAT_2_10);
+    m->numa_auto_assign_ram = numa_legacy_auto_assign_ram;
+    m->auto_enable_numa_with_memhp = false;
+}
+
+DEFINE_Q35_MACHINE(v2_10, "pc-q35-2.10", NULL,
+                   pc_q35_2_10_machine_options);
+
+static void pc_q35_2_9_machine_options(MachineClass *m)
+{
+    pc_q35_2_10_machine_options(m);
+    SET_MACHINE_COMPAT(m, PC_COMPAT_2_9);
+}
+
+DEFINE_Q35_MACHINE(v2_9, "pc-q35-2.9", NULL,
+                   pc_q35_2_9_machine_options);
+
+static void pc_q35_2_8_machine_options(MachineClass *m)
+{
+    pc_q35_2_9_machine_options(m);
+    SET_MACHINE_COMPAT(m, PC_COMPAT_2_8);
 }
 
 DEFINE_Q35_MACHINE(v2_8, "pc-q35-2.8", NULL,
@@ -306,7 +345,6 @@ DEFINE_Q35_MACHINE(v2_8, "pc-q35-2.8", NULL,
 static void pc_q35_2_7_machine_options(MachineClass *m)
 {
     pc_q35_2_8_machine_options(m);
-    m->alias = NULL;
     m->max_cpus = 255;
     SET_MACHINE_COMPAT(m, PC_COMPAT_2_7);
 }
@@ -319,6 +357,7 @@ static void pc_q35_2_6_machine_options(MachineClass *m)
     PCMachineClass *pcmc = PC_MACHINE_CLASS(m);
     pc_q35_2_7_machine_options(m);
     pcmc->legacy_cpu_hotplug = true;
+    pcmc->linuxboot_dma_enabled = false;
     SET_MACHINE_COMPAT(m, PC_COMPAT_2_6);
 }
 

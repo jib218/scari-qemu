@@ -32,14 +32,18 @@ c  | Continues qemu.
 
 ## How to build
 
-It follows the same build process like an unchanged qemu. E.g.:
+It follows the same build process like an unchanged qemu:
 
 ~~~bash
 # inside qemu source directory
-mkdir build
-cd build
-../configure --target-list=x86_64-softmmu --enable-gtk
+./configure --target-list=x86_64-softmmu --enable-gtk
 make -j 4
+~~~
+
+Clean directory:
+
+~~~bash
+make distclean && rm -rf *-softmmu
 ~~~
 
 ## How to fault inject an application running on linux.

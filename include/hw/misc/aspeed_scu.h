@@ -29,13 +29,17 @@ typedef struct AspeedSCUState {
     uint32_t silicon_rev;
     uint32_t hw_strap1;
     uint32_t hw_strap2;
+    uint32_t hw_prot_key;
 } AspeedSCUState;
 
 #define AST2400_A0_SILICON_REV   0x02000303U
+#define AST2400_A1_SILICON_REV   0x02010303U
 #define AST2500_A0_SILICON_REV   0x04000303U
 #define AST2500_A1_SILICON_REV   0x04010303U
 
 extern bool is_supported_silicon_rev(uint32_t silicon_rev);
+
+#define ASPEED_SCU_PROT_KEY      0x1688A8A8
 
 /*
  * Extracted from Aspeed SDK v00.03.21. Fixes and extra definitions
